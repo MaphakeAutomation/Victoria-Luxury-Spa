@@ -6,13 +6,13 @@
 
 const CONFIG = {
   // --- Supabase (database + auth) ---
-  // Supabase Dashboard > Project Settings > API
-  SUPABASE_URL: "YOUR_SUPABASE_PROJECT_URL",      // e.g. https://xxxxx.supabase.co
-  SUPABASE_ANON_KEY: "YOUR_SUPABASE_ANON_KEY",    // the public "anon" key — safe to expose client-side
+  // Supabase Dashboard > Project Settings > API Keys
+  SUPABASE_URL: "https://vuwrzddrgajaphzwthik.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1d3J6ZGRyZ2FqYXBoend0aGlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0Mjc5OTAsImV4cCI6MjEwNDAwMzk5MH0.Y9aK0mXPJZn2pthbDn1eL6PC_GkQs1Dx9CZY6US4Qac",
 
   // --- Supabase Edge Functions (handle Yoco payments server-side) ---
-  // These are created when you deploy the /supabase/functions folder (see README).
-  YOCO_CHECKOUT_FUNCTION_URL: "YOUR_SUPABASE_URL/functions/v1/yoco-checkout",
+  // Fill this in once you've deployed /supabase/functions/yoco-checkout (see README Step 3).
+  YOCO_CHECKOUT_FUNCTION_URL: "https://vuwrzddrgajaphzwthik.supabase.co/functions/v1/yoco-checkout",
 
   // --- Business info shown across the site ---
   BUSINESS_NAME: "Victorias Luxury SPA & WELLNESS",
@@ -21,8 +21,13 @@ const CONFIG = {
   EMAIL: "bookings@victoriasluxuryspa.co.za",
   SUBURB: "Camps Bay, Cape Town",
 
-  // Set to true once Supabase is wired up. While false, the booking widget
-  // runs in local "demo mode" (no data is saved anywhere) so you can preview
-  // and test the full flow before connecting a backend.
-  BACKEND_CONNECTED: false
+  // --- Feature flags: flip these on as each piece goes live ---
+  // Supabase is connected: real bookings, subscribers & admin login now save
+  // and read from your actual database instead of running in demo mode.
+  SUPABASE_CONNECTED: true,
+  // Yoco is connected — the deposit button now creates a real Yoco Checkout
+  // session and sends the guest to Yoco's hosted payment page (card, Apple
+  // Pay, Google Pay). Booking status flips to "confirmed" automatically once
+  // the yoco-webhook Edge Function receives payment confirmation from Yoco.
+  YOCO_CONNECTED: true
 };

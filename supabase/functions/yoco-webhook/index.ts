@@ -2,39 +2,65 @@
 // VICTORIAS LUXURY SPA & WELLNESS — Yoco Webhook Handler
 // Supabase Edge Function (Deno)
 //
-// Register this function's URL in your Yoco Dashboard as the webhook
-// endpoint for payment events (Settings > Webhooks).
+// This function's URL is registered with Yoco as a webhook endpoint
+// (via POST https://payments.yoco.com/api/webhooks). Yoco returned a
+// signing secret (whsec_...) when that webhook was created — set it as
+// the YOCO_WEBHOOK_SECRET function secret so this file can verify that
+// incoming requests genuinely came from Yoco before trusting them.
 //
 // Deploy with:  supabase functions deploy yoco-webhook --no-verify-jwt
 // (--no-verify-jwt because Yoco, not a logged-in user, calls this URL)
 //
-// !! IMPORTANT — VERIFY BEFORE GOING LIVE !!
-// Recent Yoco webhooks are signed using the Svix scheme (headers
-// "svix-id", "svix-timestamp", "svix-signature"). Confirm this against
-// your Yoco Dashboard's webhook settings and the Checkout API reference
-// before relying on it — an unverified webhook should NEVER be trusted
-// to mark a deposit as paid in production. Consider adding the "svix"
-// npm package (available via esm.sh) to verify signatures properly;
-// the check below is a placeholder that verifies the payload structure
-// but not yet a cryptographic signature.
+// !! VERIFY BEFORE RELYING ON THIS WITH REAL MONEY !!
+// Yoco's webhooks use the Svix signing scheme. Yoco's own developer docs
+// were not accessible to confirm the exact header names they send, so
+// this checks both the Svix defaults ("svix-id" etc.) and the renamed
+// "webhook-id" variant some Svix-based providers use. If verification
+// never succeeds against your real webhook traffic, check Supabase's
+// function logs for the actual header names Yoco is sending and adjust.
 // =========================================================
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { Webhook } from "https://esm.sh/svix@1.24.0";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const YOCO_WEBHOOK_SECRET = Deno.env.get("YOCO_WEBHOOK_SECRET");
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
 
-  try {
-    const event = await req.json();
+  const rawBody = await req.text();
 
-    // TODO before going live: verify the Svix signature headers here.
-    // const svixId = req.headers.get("svix-id");
-    // const svixTimestamp = req.headers.get("svix-timestamp");
-    // const svixSignature = req.headers.get("svix-signature");
-    // ... verify using your webhook signing secret from the Yoco Dashboard ...
+  // Verify the request really came from Yoco before trusting it.
+  if (YOCO_WEBHOOK_SECRET) {
+    const svixId = req.headers.get("svix-id") ?? req.headers.get("webhook-id");
+    const svixTimestamp = req.headers.get("svix-timestamp") ?? req.headers.get("webhook-timestamp");
+    const svixSignature = req.headers.get("svix-signature") ?? req.headers.get("webhook-signature");
+
+    if (svixId && svixTimestamp && svixSignature) {
+      try {
+        new Webhook(YOCO_WEBHOOK_SECRET).verify(rawBody, {
+          "svix-id": svixId,
+          "svix-timestamp": svixTimestamp,
+          "svix-signature": svixSignature,
+        });
+      } catch (err) {
+        console.error("Webhook signature verification FAILED — rejecting:", err);
+        return new Response("invalid signature", { status: 401 });
+      }
+    } else {
+      // Headers didn't match either naming scheme. Logged so you can check
+      // the real header names in Supabase's function logs and fix the
+      // names above rather than silently accepting unverified events.
+      console.warn("No recognized signature headers on incoming webhook — accepting UNVERIFIED. Check function logs for actual header names.");
+    }
+  } else {
+    console.warn("YOCO_WEBHOOK_SECRET not set — accepting webhook WITHOUT signature verification.");
+  }
+
+  try {
+    const event = JSON.parse(rawBody);
 
     const bookingId = event?.payload?.metadata?.booking_id ?? event?.metadata?.booking_id;
     const paymentStatus = event?.type || event?.payload?.status;
