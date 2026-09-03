@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Victorias Luxury SPA & WELLNESS — Camps Bay, Cape Town</title>
+<meta name="description" content="Victorias Luxury SPA & WELLNESS in Camps Bay, Cape Town. Book signature facials, massages, body treatments and more online with a secure deposit.">
+<link rel="icon" href="images/logo-mark.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<canvas id="petals-canvas" aria-hidden="true"></canvas>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<!-- ========== HEADER ========== -->
+<header class="site-header" id="site-header">
+  <div class="header-inner">
+    <a href="#top" class="brand">
+      <img src="images/logo-mark.jpg" alt="Victorias Luxury SPA & WELLNESS" class="brand-mark">
+      <span class="brand-text">Victorias<small>LUXURY SPA &amp; WELLNESS</small></span>
+    </a>
+    <nav class="main-nav" id="main-nav">
+      <a href="#menu">Treatments</a>
+      <a href="#packages">Packages</a>
+      <a href="#gallery">Gallery</a>
+      <a href="#about">About</a>
+      <a href="#policies">Policies</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="header-actions">
+      <a href="#booking" class="btn btn-gold btn-small">Book Now</a>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ========== HERO ========== -->
+  <section class="hero" id="hero">
+    <div class="hero-slides">
+      <div class="hero-slide is-active" style="background-image:url('images/hero-1.jpg')"></div>
+      <div class="hero-slide" style="background-image:url('images/hero-2.jpg')"></div>
+      <div class="hero-slide" style="background-image:url('images/hero-3.jpg')"></div>
+    </div>
+    <div class="hero-scrim"></div>
+    <div class="hero-content reveal">
+      <p class="eyebrow">Camps Bay &middot; Cape Town</p>
+      <h1>Restore Your Glow,<br>Renew Your Spirit</h1>
+      <p class="hero-sub">Signature facials, massage therapy and body treatments in an atmosphere of quiet luxury.</p>
+      <div class="hero-actions">
+        <a href="#booking" class="btn btn-gold">Book Your Treatment</a>
+        <a href="#menu" class="btn btn-outline">View Treatment Menu</a>
+      </div>
+    </div>
+    <a href="#about" class="scroll-cue" aria-label="Scroll down"><span></span></a>
+  </section>
+
+  <!-- ========== ABOUT / INTRO STRIP ========== -->
+  <section class="about" id="about">
+    <div class="container about-grid reveal">
+      <div class="about-copy">
+        <p class="eyebrow">Welcome</p>
+        <h2>Luxury. Beauty. Wellness.</h2>
+        <p>Victorias Luxury SPA &amp; WELLNESS is a Camps Bay retreat dedicated to personalised care — from
+        rejuvenating facials to therapeutic massage, body treatments and beauty finishing touches. Every visit
+        is designed around you, delivered with warmth, professionalism and attention to detail.</p>
+        <ul class="about-facts">
+          <li><strong>Location</strong><span>Camps Bay, Cape Town &mdash; serving Cape Town &amp; surrounding areas</span></li>
+          <li><strong>Hours</strong><span>Mon&ndash;Fri 09:00&ndash;18:00 &middot; Sat 08:00&ndash;17:00 &middot; Sun 09:00&ndash;15:00</span></li>
+          <li><strong>Public Holidays</strong><span>By appointment only</span></li>
+        </ul>
+      </div>
+      <div class="about-image">
+        <img src="images/gallery-spa-2.jpg" alt="Victorias Luxury SPA reception lounge" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SERVICE MENU ========== -->
+  <section class="menu-section" id="menu">
+    <div class="container">
+      <div class="section-head reveal">
+        <p class="eyebrow">Treatment Menu</p>
+        <h2>Our Treatments</h2>
+        <p class="section-sub">Every price includes consultation and preparation time. A 30% deposit (R100 minimum) secures your booking.</p>
+      </div>
+      <div class="menu-tabs" id="menu-tabs" role="tablist"></div>
+      <div class="menu-panels" id="menu-panels"></div>
+    </div>
+  </section>
+
+  <!-- ========== SIGNATURE PACKAGES ========== -->
+  <section class="packages-section" id="packages">
+    <div class="container">
+      <div class="section-head reveal">
+        <p class="eyebrow">Victorias Signature</p>
+        <h2>Signature Packages</h2>
+        <p class="section-sub">Curated experiences that bring several treatments together.</p>
+      </div>
+      <div class="packages-grid" id="packages-grid"></div>
+      <p class="voucher-note reveal">Gift Vouchers Available &mdash; treat someone special to the gift of relaxation.</p>
+    </div>
+  </section>
+
+  <!-- ========== BOOKING WIDGET ========== -->
+  <section class="booking-section" id="booking">
+    <div class="container">
+      <div class="section-head reveal">
+        <p class="eyebrow">Ready to relax?</p>
+        <h2>Book Your Treatment</h2>
+        <p class="section-sub">Choose a treatment, pick a time, and secure it with a deposit &mdash; card, Apple Pay or Google Pay.</p>
+      </div>
+
+      <div class="booking-widget reveal" id="booking-widget">
+        <div class="booking-steps">
+          <span class="step-dot is-active" data-step="1">1<em>Treatment</em></span>
+          <span class="step-dot" data-step="2">2<em>Date &amp; Time</em></span>
+          <span class="step-dot" data-step="3">3<em>Your Details</em></span>
+          <span class="step-dot" data-step="4">4<em>Deposit</em></span>
+        </div>
+
+        <!-- STEP 1 -->
+        <div class="booking-step is-active" data-step-panel="1">
+          <label class="field-label" for="booking-service-select">Select a treatment or package</label>
+          <select id="booking-service-select" class="field-select"></select>
+          <div class="booking-actions">
+            <button class="btn btn-gold" id="step1-next">Continue</button>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="booking-step" data-step-panel="2">
+          <label class="field-label" for="booking-date">Preferred date</label>
+          <input type="date" id="booking-date" class="field-input">
+          <label class="field-label" for="booking-time">Preferred time</label>
+          <select id="booking-time" class="field-select">
+            <option value="">Select a time slot</option>
+          </select>
+          <p class="field-hint">Slots shown reflect our normal opening hours. We'll confirm exact availability once your deposit is received.</p>
+          <div class="booking-actions">
+            <button class="btn btn-ghost" data-back="1">Back</button>
+            <button class="btn btn-gold" id="step2-next">Continue</button>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="booking-step" data-step-panel="3">
+          <label class="field-label" for="booking-name">Full name</label>
+          <input type="text" id="booking-name" class="field-input" placeholder="Your name" autocomplete="name">
+          <label class="field-label" for="booking-email">Email</label>
+          <input type="email" id="booking-email" class="field-input" placeholder="you@example.com" autocomplete="email">
+          <label class="field-label" for="booking-phone">Phone / WhatsApp</label>
+          <input type="tel" id="booking-phone" class="field-input" placeholder="072 000 0000" autocomplete="tel">
+          <label class="field-label" for="booking-notes">Notes (optional)</label>
+          <textarea id="booking-notes" class="field-input" rows="3" placeholder="Allergies, preferences, special requests..."></textarea>
+          <label class="checkbox-row">
+            <input type="checkbox" id="booking-newsletter">
+            <span>Keep me posted by email about last-minute openings and offers</span>
+          </label>
+          <div class="booking-actions">
+            <button class="btn btn-ghost" data-back="2">Back</button>
+            <button class="btn btn-gold" id="step3-next">Continue</button>
+          </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="booking-step" data-step-panel="4">
+          <div class="booking-summary" id="booking-summary"></div>
+          <label class="checkbox-row">
+            <input type="checkbox" id="booking-policy-agree">
+            <span>I've read and agree to the <a href="#policies">cancellation &amp; deposit policy</a></span>
+          </label>
+          <div class="booking-actions">
+            <button class="btn btn-ghost" data-back="3">Back</button>
+            <button class="btn btn-gold" id="pay-deposit-btn">Pay Deposit &amp; Confirm</button>
+          </div>
+          <p class="field-hint payment-badges">Secured by Yoco &middot; Card &middot; Apple Pay &middot; Google Pay</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== GALLERY ========== -->
+  <section class="gallery-section" id="gallery">
+    <div class="container">
+      <div class="section-head reveal">
+        <p class="eyebrow">A Glimpse Inside</p>
+        <h2>Gallery</h2>
+      </div>
+      <div class="gallery-tabs" id="gallery-tabs" role="tablist"></div>
+      <div class="gallery-grid" id="gallery-grid"></div>
+      <p class="gallery-disclaimer reveal">Visuals shown are for branding and design presentation purposes and may not represent the final premises, staff, treatments or facilities. Concept images will be gradually replaced with real photography.</p>
+    </div>
+  </section>
+
+  <!-- ========== PROFESSIONAL CARE ========== -->
+  <section class="professional-section" id="professional">
+    <div class="container professional-inner reveal">
+      <p class="eyebrow">Professional Care</p>
+      <h2>Care You Can Trust</h2>
+      <p>At Victorias Luxury SPA &amp; WELLNESS, our treatments are designed to be delivered with professionalism,
+      care and attention to each guest's individual needs. Practitioner qualifications and professional
+      credentials will be displayed here once officially confirmed.</p>
+    </div>
+  </section>
+
+  <!-- ========== POLICIES ========== -->
+  <section class="policies-section" id="policies">
+    <div class="container reveal">
+      <div class="section-head">
+        <p class="eyebrow">Good to Know</p>
+        <h2>Booking Policy</h2>
+        <p class="section-sub">We understand that plans can change. To ensure the best possible experience for every guest, please observe the following.</p>
+      </div>
+      <div class="policy-grid">
+        <div class="policy-card">
+          <h3>Rescheduling &amp; Cancellations</h3>
+          <p>Appointments may be cancelled or rescheduled at least 24 hours before the scheduled time. Cancellations made less than 24 hours before may result in the booking deposit being forfeited.</p>
+        </div>
+        <div class="policy-card">
+          <h3>No-Shows</h3>
+          <p>Guests who do not arrive for their appointment without prior notice may forfeit their deposit and may be required to pay a new deposit before making another booking.</p>
+        </div>
+        <div class="policy-card">
+          <h3>Late Arrivals</h3>
+          <p>Guests arriving late may receive a shortened treatment so appointments scheduled afterwards are not affected. The full treatment price may still apply.</p>
+        </div>
+        <div class="policy-card">
+          <h3>Deposits</h3>
+          <p>Selected treatments and spa packages require a booking deposit (30% of the treatment price, R100 minimum) to secure the appointment.</p>
+        </div>
+        <div class="policy-card">
+          <h3>Group &amp; Couples Bookings</h3>
+          <p>Larger bookings and couples packages may require additional notice for cancellations or changes. Please contact us as early as possible should your plans change.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== NEWSLETTER / SLOT ALERTS ========== -->
+  <section class="newsletter-section">
+    <div class="container newsletter-inner reveal">
+      <div class="newsletter-copy">
+        <p class="eyebrow">Never Miss an Opening</p>
+        <h2>Get Notified of Free Slots</h2>
+        <p>Leave your email and we'll let you know when a spot opens up &mdash; perfect for last-minute treats.</p>
+      </div>
+      <form class="newsletter-form" id="newsletter-form">
+        <input type="email" id="newsletter-email" placeholder="you@example.com" required aria-label="Email address">
+        <button type="submit" class="btn btn-gold">Notify Me</button>
+      </form>
+    </div>
+  </section>
+
+</main>
+
+<!-- ========== FOOTER / CONTACT ========== -->
+<footer class="site-footer" id="contact">
+  <div class="container footer-grid">
+    <div class="footer-brand">
+      <img src="images/logo-mark.jpg" alt="Victorias Luxury SPA & WELLNESS" class="footer-mark">
+      <p>Camps Bay, Cape Town &middot; serving Cape Town &amp; surrounding areas</p>
+    </div>
+    <div class="footer-col">
+      <h4>Hours</h4>
+      <p>Mon&ndash;Fri: 09:00&ndash;18:00<br>Sat: 08:00&ndash;17:00<br>Sun: 09:00&ndash;15:00<br>Public Holidays: by appointment</p>
+    </div>
+    <div class="footer-col">
+      <h4>Contact</h4>
+      <p id="footer-phone">+27 XX XXX XXXX</p>
+      <p><a href="mailto:bookings@victoriasluxuryspa.co.za">bookings@victoriasluxuryspa.co.za</a></p>
+      <a href="#" id="whatsapp-cta" class="btn btn-outline btn-small" target="_blank" rel="noopener">WhatsApp Us</a>
+    </div>
+    <div class="footer-col">
+      <h4>Explore</h4>
+      <a href="#menu">Treatments</a>
+      <a href="#packages">Packages</a>
+      <a href="#gallery">Gallery</a>
+      <a href="#policies">Policies</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>&copy; <span id="footer-year"></span> Victorias Luxury SPA &amp; WELLNESS. All rights reserved.</p>
+  </div>
+</footer>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightbox-close" aria-label="Close">&times;</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/services-data.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

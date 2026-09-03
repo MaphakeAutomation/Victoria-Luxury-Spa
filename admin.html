@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Victorias Luxury SPA & WELLNESS</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="images/logo-mark.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+
+<!-- ========== LOGIN SCREEN ========== -->
+<div class="admin-login" id="admin-login">
+  <div class="admin-login-card">
+    <img src="images/logo-mark.jpg" alt="Victorias" class="admin-login-logo">
+    <h1>Victorias Admin</h1>
+    <p class="admin-login-sub">Sign in to manage bookings, availability and your subscriber list.</p>
+    <div id="demo-mode-notice" class="admin-notice" hidden>
+      Demo mode: Supabase isn't connected yet (see <code>js/config.js</code>). Use the demo password
+      <strong>victoria2026</strong> to preview the dashboard with sample data.
+    </div>
+    <form id="login-form">
+      <label class="field-label" for="login-email">Email</label>
+      <input type="email" id="login-email" class="field-input" autocomplete="username">
+      <label class="field-label" for="login-password">Password</label>
+      <input type="password" id="login-password" class="field-input" autocomplete="current-password">
+      <button type="submit" class="btn btn-gold" style="width:100%;margin-top:24px;">Sign In</button>
+      <p class="login-error" id="login-error" hidden></p>
+    </form>
+  </div>
+</div>
+
+<!-- ========== DASHBOARD ========== -->
+<div class="admin-app" id="admin-app" hidden>
+  <aside class="admin-sidebar">
+    <div class="admin-brand">
+      <img src="images/logo-mark.jpg" alt="Victorias">
+      <span>Victorias<small>ADMIN</small></span>
+    </div>
+    <nav class="admin-nav">
+      <button class="admin-nav-item is-active" data-panel="bookings">Bookings</button>
+      <button class="admin-nav-item" data-panel="availability">Availability</button>
+      <button class="admin-nav-item" data-panel="subscribers">Subscribers</button>
+      <button class="admin-nav-item" data-panel="content">Gallery &amp; Content</button>
+      <button class="admin-nav-item" data-panel="settings">Settings</button>
+    </nav>
+    <a href="index.html" class="admin-view-site">&larr; View Live Site</a>
+    <button class="admin-logout" id="logout-btn">Sign Out</button>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-banner" id="admin-banner" hidden></div>
+
+    <!-- BOOKINGS -->
+    <section class="admin-panel is-active" data-panel="bookings">
+      <div class="admin-panel-head">
+        <h2>Bookings</h2>
+        <div class="admin-filters">
+          <select id="booking-filter">
+            <option value="all">All bookings</option>
+            <option value="upcoming">Upcoming</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="pending">Pending deposit</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div class="admin-stats" id="booking-stats"></div>
+      <div class="admin-table-wrap">
+        <table class="admin-table" id="bookings-table">
+          <thead>
+            <tr><th>Guest</th><th>Treatment</th><th>Date &amp; Time</th><th>Deposit</th><th>Status</th><th>Contact</th><th></th></tr>
+          </thead>
+          <tbody id="bookings-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- AVAILABILITY -->
+    <section class="admin-panel" data-panel="availability">
+      <div class="admin-panel-head"><h2>Availability</h2></div>
+      <p class="admin-help">Block a date or time range when you're fully booked, on leave, or closed for a public holiday. Once Supabase is connected, this writes to the <code>blocked_slots</code> table and the booking widget will automatically hide those times.</p>
+      <form class="admin-form" id="block-slot-form">
+        <div class="admin-form-row">
+          <div>
+            <label class="field-label">Date</label>
+            <input type="date" class="field-input" id="block-date" required>
+          </div>
+          <div>
+            <label class="field-label">From</label>
+            <input type="time" class="field-input" id="block-from" required>
+          </div>
+          <div>
+            <label class="field-label">To</label>
+            <input type="time" class="field-input" id="block-to" required>
+          </div>
+        </div>
+        <label class="field-label">Reason (optional)</label>
+        <input type="text" class="field-input" id="block-reason" placeholder="e.g. Fully booked, staff leave, public holiday">
+        <button type="submit" class="btn btn-gold" style="margin-top:18px;">Block This Time</button>
+      </form>
+      <div class="admin-table-wrap" style="margin-top:32px;">
+        <table class="admin-table" id="blocked-table">
+          <thead><tr><th>Date</th><th>Time</th><th>Reason</th><th></th></tr></thead>
+          <tbody id="blocked-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SUBSCRIBERS -->
+    <section class="admin-panel" data-panel="subscribers">
+      <div class="admin-panel-head">
+        <h2>Subscribers</h2>
+        <button class="btn btn-outline btn-small" id="export-subscribers">Export CSV</button>
+      </div>
+      <p class="admin-help">Everyone who signed up for slot alerts or opted in while booking. Connect this list to n8n (see README) to automatically email them when a spot opens up.</p>
+      <div class="admin-table-wrap">
+        <table class="admin-table" id="subscribers-table">
+          <thead><tr><th>Email</th><th>Source</th><th>Subscribed</th></tr></thead>
+          <tbody id="subscribers-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CONTENT -->
+    <section class="admin-panel" data-panel="content">
+      <div class="admin-panel-head"><h2>Gallery &amp; Content</h2></div>
+      <p class="admin-help">Gallery photos and menu prices currently live in the site's code (<code>images/</code> folder and <code>js/services-data.js</code>) for the fastest, most reliable loading. Once you're ready for a full content-management workflow (uploading photos here directly), that can be added on top of the Supabase Storage bucket described in the README.</p>
+      <div class="content-preview-grid" id="content-preview-grid"></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="admin-panel" data-panel="settings">
+      <div class="admin-panel-head"><h2>Settings</h2></div>
+      <div class="settings-grid">
+        <div class="settings-card">
+          <h3>Business Info</h3>
+          <dl id="settings-business"></dl>
+        </div>
+        <div class="settings-card">
+          <h3>Backend Status</h3>
+          <dl id="settings-backend"></dl>
+          <p class="admin-help" style="margin-top:14px;">Edit <code>js/config.js</code> to connect Supabase and go live. See <code>README.md</code> for the full walkthrough.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/services-data.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
