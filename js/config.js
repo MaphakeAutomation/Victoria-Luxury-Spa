@@ -14,6 +14,12 @@ const CONFIG = {
   // Fill this in once you've deployed /supabase/functions/yoco-checkout (see README Step 3).
   YOCO_CHECKOUT_FUNCTION_URL: "https://vuwrzddrgajaphzwthik.supabase.co/functions/v1/yoco-checkout",
 
+  // --- n8n email automation ---
+  // Fill this in once you've imported n8n/slot-alert-broadcast.json and activated
+  // it (README Step 5). It's what the admin dashboard's "Notify Subscribers"
+  // button calls to email everyone about newly opened slots.
+  N8N_SLOT_ALERT_WEBHOOK_URL: "https://maphakeautomation.app.n8n.cloud/webhook/slot-alert",
+
   // --- Business info shown across the site ---
   BUSINESS_NAME: "Victorias Luxury SPA & WELLNESS",
   WHATSAPP_NUMBER: "27XXXXXXXXX",   // digits only, country code, no +, no spaces (used for wa.me links)

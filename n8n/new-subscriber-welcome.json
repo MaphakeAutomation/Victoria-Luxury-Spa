@@ -1,0 +1,53 @@
+{
+  "name": "Victorias — New Subscriber Welcome Email",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new-subscriber",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "wh-new-subscriber",
+      "name": "Webhook (from Supabase DB Webhook)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Supabase Database Webhooks send { type, table, record, ... }\nconst record = $input.first().json.body?.record || $input.first().json.record;\nif (!record || !record.email) return [];\nreturn [{ json: { email: record.email } }];"
+      },
+      "id": "code-extract-email",
+      "name": "Extract Subscriber Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "REPLACE_ME_YOUR_EMAIL",
+        "toEmail": "={{ $json.email }}",
+        "subject": "You're on the list 🌸",
+        "emailFormat": "html",
+        "html": "=<div style=\"font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px;background:#fdfaf4;border:1px solid #e4d9c4;\"><h1 style=\"color:#8a6a1f;font-weight:normal;\">Victorias Luxury SPA &amp; WELLNESS</h1><p>Thanks for signing up! We'll email you the moment new appointment slots open up.</p><p>— Victorias Luxury SPA &amp; WELLNESS, Camps Bay</p></div>",
+        "options": {}
+      },
+      "id": "email-send-welcome",
+      "name": "Send Welcome Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "Webhook (from Supabase DB Webhook)": {
+      "main": [[{ "node": "Extract Subscriber Email", "type": "main", "index": 0 }]]
+    },
+    "Extract Subscriber Email": {
+      "main": [[{ "node": "Send Welcome Email", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

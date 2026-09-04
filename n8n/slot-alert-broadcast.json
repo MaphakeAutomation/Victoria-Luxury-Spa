@@ -1,0 +1,62 @@
+{
+  "name": "Victorias — Slot Alert Broadcast",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slot-alert",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "wh-slot-alert",
+      "name": "Webhook (from Admin Dashboard)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=REPLACE_ME_SUPABASE_URL/rest/v1/subscribers?select=email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "REPLACE_ME_SUPABASE_SERVICE_ROLE_KEY" },
+            { "name": "Authorization", "value": "Bearer REPLACE_ME_SUPABASE_SERVICE_ROLE_KEY" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-get-subscribers",
+      "name": "Get Subscribers from Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "REPLACE_ME_YOUR_EMAIL",
+        "toEmail": "={{ $json.email }}",
+        "subject": "New slots just opened up at Victorias Luxury SPA ✨",
+        "emailFormat": "html",
+        "html": "=<div style=\"font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px;background:#fdfaf4;border:1px solid #e4d9c4;\"><h1 style=\"color:#8a6a1f;font-weight:normal;\">Victorias Luxury SPA &amp; WELLNESS</h1><p>Good news — fresh appointment slots just opened up this week.</p><p><a href=\"REPLACE_ME_SITE_URL#booking\" style=\"color:#8a6a1f;\">Book Now</a> before they're gone.</p><p>— Victorias Luxury SPA &amp; WELLNESS, Camps Bay</p></div>",
+        "options": {}
+      },
+      "id": "email-send-broadcast",
+      "name": "Send Slot Alert (one per subscriber)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "Webhook (from Admin Dashboard)": {
+      "main": [[{ "node": "Get Subscribers from Supabase", "type": "main", "index": 0 }]]
+    },
+    "Get Subscribers from Supabase": {
+      "main": [[{ "node": "Send Slot Alert (one per subscriber)", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

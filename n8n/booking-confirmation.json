@@ -1,0 +1,75 @@
+{
+  "name": "Victorias — Booking Confirmation Email",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "booking-confirmed",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "wh-booking-confirmed",
+      "name": "Webhook (from Supabase)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=REPLACE_ME_SUPABASE_URL/rest/v1/bookings?id=eq.{{ $json.body.bookingId }}&select=*",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "REPLACE_ME_SUPABASE_SERVICE_ROLE_KEY" },
+            { "name": "Authorization", "value": "Bearer REPLACE_ME_SUPABASE_SERVICE_ROLE_KEY" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "http-get-booking",
+      "name": "Get Booking from Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const booking = $input.first().json[0];\nif (!booking) {\n  return [];\n}\n\nconst html = `\n  <div style=\"font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:32px;background:#fdfaf4;border:1px solid #e4d9c4;\">\n    <h1 style=\"color:#8a6a1f;font-weight:normal;\">Victorias Luxury SPA &amp; WELLNESS</h1>\n    <p>Hi ${booking.guest_name},</p>\n    <p>Your deposit has been received and your booking is confirmed. Here are your details:</p>\n    <table style=\"width:100%;margin:16px 0;\">\n      <tr><td style=\"padding:6px 0;color:#8a6a1f;\">Treatment</td><td style=\"text-align:right;\">${booking.service_name}</td></tr>\n      <tr><td style=\"padding:6px 0;color:#8a6a1f;\">Date &amp; Time</td><td style=\"text-align:right;\">${booking.booking_date} at ${booking.booking_time}</td></tr>\n      <tr><td style=\"padding:6px 0;color:#8a6a1f;\">Deposit Paid</td><td style=\"text-align:right;\">R${booking.deposit_amount}</td></tr>\n    </table>\n    <p>Please arrive 10 minutes early. If you need to cancel or reschedule, please give us at least 24 hours' notice.</p>\n    <p style=\"margin-top:24px;\">We look forward to welcoming you.</p>\n    <p>— Victorias Luxury SPA &amp; WELLNESS, Camps Bay</p>\n  </div>\n`;\n\nreturn [{\n  json: {\n    guest_email: booking.guest_email,\n    guest_name: booking.guest_name,\n    htmlContent: html\n  }\n}];"
+      },
+      "id": "code-build-email",
+      "name": "Build Confirmation Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "REPLACE_ME_YOUR_EMAIL",
+        "toEmail": "={{ $json.guest_email }}",
+        "subject": "Your booking is confirmed 🌸",
+        "emailFormat": "html",
+        "html": "={{ $json.htmlContent }}",
+        "options": {}
+      },
+      "id": "email-send-confirmation",
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [920, 300]
+    }
+  ],
+  "connections": {
+    "Webhook (from Supabase)": {
+      "main": [[{ "node": "Get Booking from Supabase", "type": "main", "index": 0 }]]
+    },
+    "Get Booking from Supabase": {
+      "main": [[{ "node": "Build Confirmation Email", "type": "main", "index": 0 }]]
+    },
+    "Build Confirmation Email": {
+      "main": [[{ "node": "Send Confirmation Email", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

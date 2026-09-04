@@ -116,9 +116,12 @@
     <section class="admin-panel" data-panel="subscribers">
       <div class="admin-panel-head">
         <h2>Subscribers</h2>
-        <button class="btn btn-outline btn-small" id="export-subscribers">Export CSV</button>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-outline btn-small" id="export-subscribers">Export CSV</button>
+          <button class="btn btn-gold btn-small" id="notify-subscribers">🔔 Notify Subscribers</button>
+        </div>
       </div>
-      <p class="admin-help">Everyone who signed up for slot alerts or opted in while booking. Connect this list to n8n (see README) to automatically email them when a spot opens up.</p>
+      <p class="admin-help">Everyone who signed up for slot alerts or opted in while booking. Click <strong>Notify Subscribers</strong> whenever you have new open slots — it emails everyone on this list via your n8n automation (see README Step 5 to set it up).</p>
       <div class="admin-table-wrap">
         <table class="admin-table" id="subscribers-table">
           <thead><tr><th>Email</th><th>Source</th><th>Subscribed</th></tr></thead>
@@ -152,7 +155,13 @@
   </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="js/config.js"></script>
+<script>
+  const supabaseClient = (CONFIG.SUPABASE_CONNECTED && window.supabase)
+    ? window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY)
+    : null;
+</script>
 <script src="js/services-data.js"></script>
 <script src="js/admin.js"></script>
 </body>

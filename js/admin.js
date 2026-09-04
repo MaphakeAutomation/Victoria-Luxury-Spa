@@ -28,25 +28,34 @@ document.addEventListener("DOMContentLoaded", () => {
   initLogin();
 });
 
-function initLogin() {
+async function initLogin() {
   const notice = document.getElementById("demo-mode-notice");
-  if (!CONFIG.BACKEND_CONNECTED) notice.hidden = false;
+  const usingSupabase = CONFIG.SUPABASE_CONNECTED && supabaseClient;
+  if (!usingSupabase) notice.hidden = false;
 
-  const savedSession = sessionStorage.getItem("victorias_admin_session");
-  if (savedSession) { showApp(); return; }
+  if (usingSupabase) {
+    const { data } = await supabaseClient.auth.getSession();
+    if (data.session) { showApp(); return; }
+  } else if (sessionStorage.getItem("victorias_admin_session")) {
+    showApp();
+    return;
+  }
 
-  document.getElementById("login-form").addEventListener("submit", (e) => {
+  document.getElementById("login-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = document.getElementById("login-email").value.trim();
     const password = document.getElementById("login-password").value;
     const errorEl = document.getElementById("login-error");
+    errorEl.hidden = true;
 
-    if (CONFIG.BACKEND_CONNECTED) {
-      // --- LIVE MODE ---
-      // const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      // if (error) { errorEl.textContent = error.message; errorEl.hidden = false; return; }
-      errorEl.textContent = "Supabase Auth not wired up yet — see README.md.";
-      errorEl.hidden = false;
+    if (usingSupabase) {
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) {
+        errorEl.textContent = error.message + " — make sure you've added yourself under Supabase Authentication → Users.";
+        errorEl.hidden = false;
+        return;
+      }
+      showApp();
       return;
     }
 
@@ -60,25 +69,30 @@ function initLogin() {
   });
 }
 
-function showApp() {
+async function showApp() {
   document.getElementById("admin-login").hidden = true;
   const app = document.getElementById("admin-app");
   app.hidden = false;
 
-  if (!CONFIG.BACKEND_CONNECTED) {
-    const banner = document.getElementById("admin-banner");
+  const usingSupabase = CONFIG.SUPABASE_CONNECTED && supabaseClient;
+  const banner = document.getElementById("admin-banner");
+  if (!usingSupabase) {
     banner.hidden = false;
     banner.textContent = "Demo mode — showing sample bookings & subscribers. Connect Supabase in js/config.js to see real data.";
+  } else if (!CONFIG.YOCO_CONNECTED) {
+    banner.hidden = false;
+    banner.textContent = "Supabase connected — bookings & subscribers below are real. Yoco isn't wired up yet, so new bookings arrive as \"pending\" until you confirm the deposit with the guest directly.";
   }
 
   initNav();
-  initBookings();
-  initAvailability();
-  initSubscribers();
+  await initBookings();
+  await initAvailability();
+  await initSubscribers();
   initContent();
   initSettings();
 
-  document.getElementById("logout-btn").addEventListener("click", () => {
+  document.getElementById("logout-btn").addEventListener("click", async () => {
+    if (usingSupabase) await supabaseClient.auth.signOut();
     sessionStorage.removeItem("victorias_admin_session");
     location.reload();
   });
@@ -96,22 +110,48 @@ function initNav() {
 }
 
 /* ---------- Bookings ---------- */
-function initBookings() {
-  renderBookingStats(DEMO_BOOKINGS);
-  renderBookingsTable(DEMO_BOOKINGS);
+let currentBookings = DEMO_BOOKINGS;
+
+async function fetchBookings() {
+  if (!(CONFIG.SUPABASE_CONNECTED && supabaseClient)) return DEMO_BOOKINGS;
+  const { data, error } = await supabaseClient
+    .from("bookings")
+    .select("*")
+    .order("booking_date", { ascending: true });
+  if (error) { console.error(error); showBanner("Could not load bookings: " + error.message); return []; }
+  return data.map(r => ({
+    id: r.id,
+    guest: r.guest_name,
+    email: r.guest_email,
+    phone: r.guest_phone,
+    service: r.service_name,
+    date: r.booking_date,
+    time: (r.booking_time || "").slice(0, 5),
+    price: Number(r.service_price),
+    deposit: Number(r.deposit_amount),
+    status: r.status
+  }));
+}
+
+function showBanner(msg) {
+  const banner = document.getElementById("admin-banner");
+  banner.hidden = false;
+  banner.textContent = msg;
+}
+
+async function initBookings() {
+  currentBookings = await fetchBookings();
+  renderBookingStats(currentBookings);
+  renderBookingsTable(currentBookings);
 
   document.getElementById("booking-filter").addEventListener("change", (e) => {
     const val = e.target.value;
-    let filtered = DEMO_BOOKINGS;
+    let filtered = currentBookings;
     const today = new Date().toISOString().split("T")[0];
-    if (val === "upcoming") filtered = DEMO_BOOKINGS.filter(b => b.date >= today && b.status !== "cancelled");
-    else if (val !== "all") filtered = DEMO_BOOKINGS.filter(b => b.status === val);
+    if (val === "upcoming") filtered = currentBookings.filter(b => b.date >= today && b.status !== "cancelled");
+    else if (val !== "all") filtered = currentBookings.filter(b => b.status === val);
     renderBookingsTable(filtered);
   });
-
-  // --- LIVE MODE example ---
-  // const { data } = await supabaseClient.from('bookings').select('*').order('date');
-  // renderBookingsTable(data); renderBookingStats(data);
 }
 
 function renderBookingStats(rows) {
@@ -141,15 +181,35 @@ function renderBookingsTable(rows) {
       <td>${formatZAR(b.deposit)}</td>
       <td><span class="status-pill ${b.status}">${b.status}</span></td>
       <td>${b.email}<br><span style="color:var(--muted)">${b.phone}</span></td>
-      <td><button class="row-action">Manage</button></td>
+      <td>${b.id ? `<button class="row-action" onclick="manageBooking('${b.id}')">Manage</button>` : ""}</td>
     </tr>
   `).join("");
 }
 
+async function manageBooking(id) {
+  const choice = prompt("Set status to: confirmed, cancelled, completed or no_show");
+  const valid = ["confirmed", "cancelled", "completed", "no_show", "pending"];
+  if (!choice || !valid.includes(choice.trim().toLowerCase())) return;
+  const { error } = await supabaseClient.from("bookings").update({ status: choice.trim().toLowerCase() }).eq("id", id);
+  if (error) { alert("Could not update: " + error.message); return; }
+  currentBookings = await fetchBookings();
+  renderBookingStats(currentBookings);
+  renderBookingsTable(currentBookings);
+}
+
 /* ---------- Availability ---------- */
-function initAvailability() {
+const usingSupabaseDB = () => CONFIG.SUPABASE_CONNECTED && supabaseClient;
+
+async function fetchBlockedSlots() {
+  if (!usingSupabaseDB()) return blockedSlots;
+  const { data, error } = await supabaseClient.from("blocked_slots").select("*").order("block_date");
+  if (error) { console.error(error); return []; }
+  return data.map(r => ({ id: r.id, date: r.block_date, from: (r.from_time || "").slice(0, 5), to: (r.to_time || "").slice(0, 5), reason: r.reason || "Unavailable" }));
+}
+
+async function initAvailability() {
   document.getElementById("block-date").min = new Date().toISOString().split("T")[0];
-  document.getElementById("block-slot-form").addEventListener("submit", (e) => {
+  document.getElementById("block-slot-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const entry = {
       date: document.getElementById("block-date").value,
@@ -157,38 +217,61 @@ function initAvailability() {
       to: document.getElementById("block-to").value,
       reason: document.getElementById("block-reason").value.trim() || "Unavailable"
     };
-    blockedSlots.push(entry);
-    renderBlockedTable();
+    if (usingSupabaseDB()) {
+      const { error } = await supabaseClient.from("blocked_slots").insert({
+        block_date: entry.date, from_time: entry.from, to_time: entry.to, reason: entry.reason
+      });
+      if (error) { alert("Could not save: " + error.message); return; }
+    } else {
+      blockedSlots.push(entry);
+    }
+    await renderBlockedTable();
     e.target.reset();
-
-    // --- LIVE MODE ---
-    // await supabaseClient.from('blocked_slots').insert(entry);
   });
-  renderBlockedTable();
+  await renderBlockedTable();
 }
 
-function renderBlockedTable() {
+async function renderBlockedTable() {
+  const rows = await fetchBlockedSlots();
   const tbody = document.getElementById("blocked-tbody");
-  if (!blockedSlots.length) {
+  if (!rows.length) {
     tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);">No blocked times yet.</td></tr>`;
     return;
   }
-  tbody.innerHTML = blockedSlots.map((s, idx) => `
+  tbody.innerHTML = rows.map((s, idx) => `
     <tr>
       <td>${new Date(s.date + "T00:00:00").toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" })}</td>
       <td>${s.from} &ndash; ${s.to}</td>
       <td>${s.reason}</td>
-      <td><button class="row-action" onclick="removeBlockedSlot(${idx})">Remove</button></td>
+      <td><button class="row-action" onclick="removeBlockedSlot('${s.id ?? idx}')">Remove</button></td>
     </tr>
   `).join("");
 }
-function removeBlockedSlot(idx) { blockedSlots.splice(idx, 1); renderBlockedTable(); }
+async function removeBlockedSlot(idOrIdx) {
+  if (usingSupabaseDB()) {
+    const { error } = await supabaseClient.from("blocked_slots").delete().eq("id", idOrIdx);
+    if (error) { alert("Could not remove: " + error.message); return; }
+  } else {
+    blockedSlots.splice(Number(idOrIdx), 1);
+  }
+  await renderBlockedTable();
+}
 
 /* ---------- Subscribers ---------- */
-function initSubscribers() {
-  renderSubscribers(DEMO_SUBSCRIBERS);
+let currentSubscribers = DEMO_SUBSCRIBERS;
+
+async function fetchSubscribers() {
+  if (!usingSupabaseDB()) return DEMO_SUBSCRIBERS;
+  const { data, error } = await supabaseClient.from("subscribers").select("*").order("created_at", { ascending: false });
+  if (error) { console.error(error); return []; }
+  return data.map(r => ({ email: r.email, source: r.source, date: r.created_at }));
+}
+
+async function initSubscribers() {
+  currentSubscribers = await fetchSubscribers();
+  renderSubscribers(currentSubscribers);
   document.getElementById("export-subscribers").addEventListener("click", () => {
-    const csv = "email,source,date\n" + DEMO_SUBSCRIBERS.map(s => `${s.email},${s.source},${s.date}`).join("\n");
+    const csv = "email,source,date\n" + currentSubscribers.map(s => `${s.email},${s.source},${s.date}`).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -197,9 +280,31 @@ function initSubscribers() {
     URL.revokeObjectURL(url);
   });
 
-  // --- LIVE MODE ---
-  // const { data } = await supabaseClient.from('subscribers').select('*').order('created_at', { ascending: false });
-  // renderSubscribers(data);
+  document.getElementById("notify-subscribers").addEventListener("click", async () => {
+    if (!CONFIG.N8N_SLOT_ALERT_WEBHOOK_URL) {
+      showBanner("Set N8N_SLOT_ALERT_WEBHOOK_URL in js/config.js first — see README Step 5.");
+      return;
+    }
+    if (!currentSubscribers.length) {
+      showBanner("No subscribers yet — nothing to send.");
+      return;
+    }
+    if (!confirm(`Email all ${currentSubscribers.length} subscribers about newly opened slots?`)) return;
+
+    const btn = document.getElementById("notify-subscribers");
+    btn.disabled = true;
+    btn.textContent = "Sending...";
+    try {
+      await fetch(CONFIG.N8N_SLOT_ALERT_WEBHOOK_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      showBanner(`Slot alert sent to ${currentSubscribers.length} subscriber(s).`);
+    } catch (err) {
+      console.error(err);
+      showBanner("Couldn't reach the n8n webhook — check the URL in js/config.js and that the workflow is active.");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "🔔 Notify Subscribers";
+    }
+  });
 }
 
 function renderSubscribers(rows) {
@@ -227,7 +332,8 @@ function initSettings() {
     <dt>Phone</dt><dd>${CONFIG.PHONE_DISPLAY}</dd>
   `;
   document.getElementById("settings-backend").innerHTML = `
-    <dt>Supabase Connected</dt><dd>${CONFIG.BACKEND_CONNECTED ? "Yes" : "No — running in demo mode"}</dd>
+    <dt>Supabase Connected</dt><dd>${CONFIG.SUPABASE_CONNECTED ? "Yes — bookings & subscribers are real" : "No — running in demo mode"}</dd>
+    <dt>Yoco Connected</dt><dd>${CONFIG.YOCO_CONNECTED ? "Yes — deposits charge live" : "Not yet — bookings save as \"pending\" until you deploy the Yoco Edge Function"}</dd>
     <dt>Deposit Rate</dt><dd>${(DEPOSIT_RATE * 100).toFixed(0)}% (min ${formatZAR(DEPOSIT_MIN)})</dd>
   `;
 }

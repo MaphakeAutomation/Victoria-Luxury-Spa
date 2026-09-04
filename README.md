@@ -104,22 +104,73 @@ match your real domain.
 
 ## Step 5 — Set up n8n (email automation)
 
-Use n8n to email your subscriber list when a slot opens up, and to send booking confirmations.
+Three ready-to-import workflows live in the `n8n/` folder: booking confirmations, a welcome
+email for new subscribers, and a "Notify Subscribers" broadcast triggered from your admin
+dashboard. All three send email using **n8n's own built-in Send Email node** — no separate
+email service to sign up for. It just needs an SMTP login, which your existing Gmail (or
+whatever inbox you want emails to come from) can provide for free.
 
-1. Sign up for [n8n Cloud](https://n8n.io) (or self-host).
-2. Sign up for [Brevo](https://www.brevo.com) or [Resend](https://resend.com) for sending emails
-   (both have generous free tiers) and get an API key.
-3. In n8n, create a workflow:
-   - **Trigger**: a Postgres node connected to your Supabase database (Supabase Dashboard >
-     Project Settings > Database gives you the connection string), polling the `bookings` table
-     for new `cancelled` rows (a freed-up slot), or a Webhook node that the `yoco-webhook`
-     function calls directly (see `N8N_BOOKING_WEBHOOK_URL` in `supabase/functions/yoco-webhook`).
-   - **Filter**: match subscribers in the `subscribers` table interested in that service (or all
-     subscribers, for a simple version).
-   - **Send Email** node (Brevo/Resend): "A slot just opened up at Victorias Luxury SPA — book
-     now before it's gone!" with a link back to your site.
-4. For booking confirmations: trigger a second workflow off new `confirmed` bookings, emailing
-   the guest their appointment details and policy reminder.
+### 5.1 — Sign up for n8n + get an SMTP login
+
+1. **n8n Cloud**: sign up at [n8n.io](https://n8n.io) (14-day free trial, then a paid plan — or
+   self-host n8n for free if you'd rather not pay later).
+2. **Get an "app password" for the inbox you want to send from** (using a personal/business
+   Gmail address is the easiest free option):
+   - Go to [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
+     (requires 2-Step Verification to be turned on for that Google account first).
+   - Create an app password named "n8n", and copy the 16-character code it gives you — you
+     won't see it again.
+   - This code is what you'll use as the password below (not your normal Gmail password).
+3. In n8n, go to **Credentials > Add Credential > SMTP**, and fill in:
+   - **User**: your full Gmail address
+   - **Password**: the 16-character app password from step 2
+   - **Host**: `smtp.gmail.com`
+   - **Port**: `465`, **SSL/TLS**: on
+   - Save it as something like "Victorias Email".
+
+   (Using a different provider instead of Gmail? Any SMTP login works the same way — just use
+   that provider's host/port/credentials instead.)
+
+### 5.2 — Import the workflows
+
+For each of the three files in `n8n/` (`booking-confirmation.json`, `new-subscriber-welcome.json`,
+`slot-alert-broadcast.json`):
+
+1. In n8n, click **Add workflow > Import from File** and select the file.
+2. Open every **HTTP Request** node (the ones talking to Supabase) and replace:
+   - `REPLACE_ME_SUPABASE_URL` → `https://vuwrzddrgajaphzwthik.supabase.co`
+   - `REPLACE_ME_SUPABASE_SERVICE_ROLE_KEY` → your Supabase **service_role** key (Project
+     Settings > API Keys — NOT the anon key; this one bypasses RLS so keep it inside n8n only)
+3. Open the **Send Email** node and:
+   - Select the "Victorias Email" SMTP credential you created in 5.1
+   - Replace `REPLACE_ME_YOUR_EMAIL` (the "From" field) with the same Gmail address
+   - In `slot-alert-broadcast.json` only, also replace `REPLACE_ME_SITE_URL` with your live site URL
+4. Click **Save**, then toggle the workflow **Active** (top right).
+5. Open the workflow's **Webhook** node and copy its **Production URL** — you'll need it next.
+
+### 5.3 — Connect each workflow to the site
+
+- **Booking confirmations** (`booking-confirmation.json`): paste its webhook URL as the
+  `N8N_BOOKING_WEBHOOK_URL` secret on Supabase:
+  ```
+  npx -y supabase@latest secrets set N8N_BOOKING_WEBHOOK_URL=<paste URL> --project-ref vuwrzddrgajaphzwthik
+  ```
+  Every time a deposit payment succeeds, the `yoco-webhook` function will call this and the guest
+  gets an automatic confirmation email.
+
+- **Slot alert broadcast** (`slot-alert-broadcast.json`): paste its webhook URL into
+  `N8N_SLOT_ALERT_WEBHOOK_URL` in `js/config.js`, then redeploy the site. A **🔔 Notify
+  Subscribers** button now appears on the admin dashboard's Subscribers tab — click it any time
+  you have open slots to email everyone on the list in one go.
+
+- **New subscriber welcome** (`new-subscriber-welcome.json`): in Supabase Dashboard, go to
+  **Database > Webhooks > Create a new hook**. Set it to fire on **Insert** for the `subscribers`
+  table, type **HTTP Request**, and paste this workflow's webhook URL as the target. Now anyone
+  who signs up (via the newsletter form or while booking) gets an instant welcome email.
+
+That's the full loop: someone signs up → welcome email; a slot opens up → you click one button
+to tell everyone; someone books and pays their deposit → they get a confirmation email
+automatically.
 
 ## Certifications & real photography
 
