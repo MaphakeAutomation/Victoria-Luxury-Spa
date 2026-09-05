@@ -297,7 +297,13 @@
   <img id="lightbox-img" src="" alt="">
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="js/config.js"></script>
+<script>
+  const supabaseClient = (CONFIG.SUPABASE_CONNECTED && window.supabase)
+    ? window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY)
+    : null;
+</script>
 <script src="js/services-data.js"></script>
 <script src="js/main.js"></script>
 </body>
